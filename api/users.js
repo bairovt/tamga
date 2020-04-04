@@ -13,6 +13,8 @@ async function login(ctx) {
     email,
     password
   } = ctx.request.body;
+  const loginErrorMessage = 'Неверный email или пароль'
+  if (!(email && password)) ctx.throw(401, loginErrorMessage);
   email = email.toLowerCase();
 
   const user = await db.query(aql `
@@ -21,17 +23,17 @@ async function login(ctx) {
       RETURN user
   `).then(cursor => cursor.next());
 
-  if (!user) ctx.throw(401, 'Неверный email или пароль');
+  if (!user) ctx.throw(401, loginErrorMessage);
 
   const passCheck = await User.checkPassword(password, user.passHash);
 
-  if (!passCheck) return ctx.throw(401, 'Неверный email или пароль');
+  if (!passCheck) return ctx.throw(401, loginErrorMessage);
 
   if ([1].includes(user.status)) {
     const jwtPayload = {
       _key: user._key,
       _id: user._id,
-      name: user.name,
+      firstName: user.firstName,
       roles: user.roles
     };
     const authToken = jwt.sign(jwtPayload, secretKey);
