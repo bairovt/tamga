@@ -8,7 +8,7 @@ module.exports = {
   secretKey: 'super creazy secret key',
   root: root,
   server: {
-    port: 8888
+    port: 8880
   },
   env: 'development',
   corsOrigin: 'http://localhost:8080',
