@@ -12,9 +12,9 @@ const server = http.createServer(app.callback());
 
 /* middlewares */
 app.use(cors); // use cors to allow requests from different origin (localhost:8080 - on dev e.g.)
-if (app.env === 'development') {
-  app.use(logger())
-}
+// if (app.env === 'development') app.use(logger())
+app.use(logger())
+
 app.use(require('koa-bodyparser')());
 app.use(errorHandler);
 
