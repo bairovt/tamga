@@ -40,8 +40,20 @@ async function getOrder(ctx) {
       return cursor.next();
     });
   if (!order) ctx.throw(404);
+
+  let products = await db
+    .query(
+      aql `FOR product IN Products
+          FILTER product.order_id == ${'Orders/'+_key}
+          SORT product.createdAt DESC
+          RETURN product`)
+    .then((cursor) => {
+      return cursor.all();
+    });
+
   ctx.body = {
     order,
+    products
   };
 }
 
@@ -93,7 +105,7 @@ async function deleteOrder(ctx) {
   let productsCount = await db
     .query(
       aql `FOR product IN Products          
-          FILTER product.order_id == Orders/${_key}
+          FILTER product.order_id == ${'Orders/'+_key}
           COLLECT WITH COUNT INTO cnt
           RETURN cnt`)
     .then((cursor) => {
