@@ -27,6 +27,7 @@ router
   .use('/api/users', require('./api/users'))
   .use('/api/clients', require('./api/clients'))
   .use('/api/orders', require('./api/orders'))
+  .use('/api/products', require('./api/products'))
 
 
 app.use(router.routes());
