@@ -5,7 +5,7 @@ const Router = require("koa-router");
 const authorize = require("../middleware/authorize");
 const Joi = require('joi');
 const {
-  updateProductSchema
+  productSchema
 } = require('../models/schemas/productSchemas');
 
 const router = new Router();
@@ -54,8 +54,7 @@ async function createProduct(ctx) {
   const {
     createProductDto
   } = ctx.request.body;
-  //todo: validation
-  let productData = createProductDto;
+  let productData = Joi.attempt(createProductDto, productSchema.unknown()); // {stripUnknown: true}
   productData.createdBy = ctx.state.user._id;
   productData.createdAt = new Date();
   const productsCollection = db.collection("Products");
@@ -78,7 +77,7 @@ async function updateProduct(ctx) {
   let {
     updateProductDto
   } = ctx.request.body;
-  let productData = Joi.attempt(updateProductDto, updateProductSchema.unknown()); // {stripUnknown: true}
+  let productData = Joi.attempt(updateProductDto, productSchema.unknown());
   productData.updatedBy = user._id;
   productData.updatedAt = new Date();
   const meta = await productsCollection.update(_key, productData, true);
