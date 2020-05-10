@@ -59,6 +59,55 @@ async function createProduct(ctx) {
   };
 }
 
+async function createProductsFromCsv(ctx) {
+  let { fromSpec, order_id, csv } = ctx.request.body;
+
+  csv = csv.trim();
+  const originalLines = csv.split(/\r?\n/);
+
+  csv = csv.replace(/\$/g, '');
+  csv = csv.replace(/,/g, '.');
+  const lines = csv.split(/\r?\n/);
+
+  if (fromSpec) {
+    // replace only first occurance in each line
+    lines.forEach((line, idx, lines) => {
+      lines[idx] = line.replace(/\t\t\t/, '\t');
+    });
+  }
+  const productsCollection = db.collection('Products');
+  const products = [];
+
+  lines.forEach((line, idx, lines) => {
+    const cols = line.split('\t');
+    const createProductDto = {
+      tnved: cols[0],
+      name: cols[1],
+      packType: null, //cols[2],
+      measure: cols[3],
+      seats: cols[4],
+      qty: cols[5],
+      wnetto: cols[6],
+      wbrutto: cols[7],
+      cvi: cols[8],
+      comment: originalLines[idx],
+    };
+    let productData = Joi.attempt(createProductDto, productSchema, {
+      stripUnknown: true,
+    });
+    productData.order_id = order_id;
+    productData.createdBy = ctx.state.user._id;
+    productData.createdAt = new Date();
+    productData.fromCsv = true;
+    products.push(productData);
+  });
+
+  await productsCollection.import(products, { type: 'documents', complete: true });
+  ctx.body = {
+    productsCnt: products.length,
+  };
+}
+
 async function updateProduct(ctx) {
   const { _key } = ctx.params;
   const { user } = ctx.state;
@@ -103,5 +152,6 @@ router
   .put('/:_key', authorize(['palam', 'vova']), updateProduct)
   .delete('/:_key', authorize(['palam', 'vova']), deleteProduct)
   .delete('/', authorize(['palam', 'vova']), deleteProducts)
+  .post('/csv', authorize(['palam', 'vova']), createProductsFromCsv);
 
 module.exports = router.routes();
