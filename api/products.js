@@ -78,12 +78,19 @@ async function updateProduct(ctx) {
 }
 
 async function deleteProduct(ctx) {
-  const { _key } = ctx.params;
-  const productsCollection = db.collection('Products');
-  const product = await productsCollection.document(_key);
-  if (!product) ctx.throw(404, 'Product not found');
   // todo: verify deletion of the product
-  await productsCollection.remove(_key);
+  const { _key } = ctx.params;
+  await db.collection('Products').remove(_key);
+  ctx.body = {
+    result: 'OK',
+  };
+}
+
+async function deleteProducts(ctx) {
+  const { productKeys } = ctx.request.body;
+  const productsColl = db.collection('Products');
+  const removePromises = productKeys.map((key) => productsColl.remove(key));
+  await Promise.all(removePromises);
   ctx.body = {
     result: 'OK',
   };
@@ -94,7 +101,7 @@ router
   .get('/', findProducts)
   .get('/:_key', getProduct)
   .put('/:_key', authorize(['palam', 'vova']), updateProduct)
-  .delete('/:_key', authorize(['palam', 'vova']), deleteProduct);
-// .post('/csv', authorize(['palam', 'vova']), createProductsFromCsv);
+  .delete('/:_key', authorize(['palam', 'vova']), deleteProduct)
+  .delete('/', authorize(['palam', 'vova']), deleteProducts)
 
 module.exports = router.routes();
