@@ -136,6 +136,8 @@ async function deleteProduct(ctx) {
 }
 
 async function deleteProducts(ctx) {
+  // todo: make within a transaction
+  // https://github.com/arangodb/arangojs/blob/master/docs/Drivers/JS/Reference/Database/Transactions.md
   const { productKeys } = ctx.request.body;
   const productsColl = db.collection('Products');
   const removePromises = productKeys.map((key) => productsColl.remove(key));

@@ -24,11 +24,11 @@ const productSchema = Joi.object().keys({
   measure: Joi.string()
     .valid(...measureUnits)
     .required(),
-  seats: Joi.number(),
-  qty: Joi.number(),
-  wnetto: Joi.number(),
-  wbrutto: Joi.number(),
-  cvi: Joi.number(),
+  seats: Joi.number().min(0).empty('').default(0),
+  qty: Joi.number().min(0).empty('').default(0),
+  wnetto: Joi.number().min(0).empty('').default(0),
+  wbrutto: Joi.number().min(0).empty('').default(0),
+  cvi: Joi.number().min(0).empty('').default(0),
   comment: Joi.string().trim().min(1).max(5000).empty('').allow(null),
 });
 
