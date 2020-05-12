@@ -1,12 +1,6 @@
 const Joi = require('@hapi/joi');
 const { packTypes, measureUnits } = require('../../consts');
 
-const arangoIdSchema = Joi.string()
-  .trim()
-  .regex(/^[a-zA-Z0-9]+\/[a-zA-Z0-9]+$/)
-  .min(3)
-  .max(50);
-
 const packTypeValues = packTypes.map((pack) => pack.value);
 
 const productSchema = Joi.object().keys({
@@ -32,6 +26,4 @@ const productSchema = Joi.object().keys({
   comment: Joi.string().trim().min(1).max(5000).empty('').allow(null),
 });
 
-module.exports = {
-  productSchema,
-};
+module.exports = productSchema;

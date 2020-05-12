@@ -3,6 +3,8 @@ const db = require('../lib/arangodb');
 const aql = require('arangojs').aql;
 const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
+const Joi = require('@hapi/joi');
+const orderSchema = require('../models/schemas/orderSchema');
 
 const router = new Router();
 
@@ -29,6 +31,7 @@ async function findOrders(ctx) {
 
 async function getOrder(ctx) {
   const { _key } = ctx.params;
+  // todo: const { with_products = true } = ctx.query;
   let order = await db
     .query(
       aql`FOR order IN Orders
@@ -38,7 +41,7 @@ async function getOrder(ctx) {
     .then((cursor) => {
       return cursor.next();
     });
-  if (!order) ctx.throw(404);
+  if (!order) ctx.throw(404, 'Order not found');
 
   let products = await db
     .query(
@@ -59,13 +62,11 @@ async function getOrder(ctx) {
 
 async function createOrder(ctx) {
   const { createOrderDto } = ctx.request.body;
-  // let orderData = Joi.attempt(createOrderDto, orderSchema); // todo: validation
-  let orderData = createOrderDto;
   orderData.status = 'NEW';
+  let orderData = Joi.attempt(createOrderDto, orderSchema, { stripUnknown: true });
   orderData.createdBy = ctx.state.user._id;
   orderData.createdAt = new Date();
-  const ordersCollection = db.collection('Orders');
-  const order = await ordersCollection.save(orderData);
+  const order = await db.collection('Orders').save(orderData);
   ctx.body = {
     order_key: order._key,
   };
@@ -74,14 +75,11 @@ async function createOrder(ctx) {
 async function updateOrder(ctx) {
   const { _key } = ctx.params;
   const { user } = ctx.state;
-  const ordersCollection = db.collection('Orders');
-  const order = ordersCollection.document(_key);
-  if (!order) ctx.throw(404);
   let { updateOrderDto } = ctx.request.body;
-  // let orderData = Joi.attempt(updateOrderDto, orderSchema.unknown()); // {stripUnknown: true}
+  let orderData = Joi.attempt(updateOrderDto, orderSchema, { stripUnknown: true });
   orderData.updatedBy = user._id;
   orderData.updatedAt = new Date();
-  await ordersCollection.update(_key, orderData);
+  await db.collection('Orders').update(_key, orderData);
   ctx.body = {
     result: 'OK',
   };
@@ -89,8 +87,8 @@ async function updateOrder(ctx) {
 
 async function deleteOrder(ctx) {
   const { _key } = ctx.params;
-  const ordersCollection = db.collection('Orders');
-  const order = await ordersCollection.document(_key);
+  const ordersColl = db.collection('Orders');
+  const order = await ordersColl.document(_key);
   if (!order) ctx.throw(404);
   let productsCount = await db
     .query(
@@ -104,7 +102,7 @@ async function deleteOrder(ctx) {
     });
   if (productsCount) ctx.throw(400, 'Order has products');
 
-  await ordersCollection.remove(_key);
+  await ordersColl.remove(_key);
   ctx.body = {
     result: 'OK',
   };
@@ -114,7 +112,7 @@ router
   .post('/', authorize(['palam', 'vova']), createOrder)
   .get('/', findOrders)
   .get('/:_key', getOrder)
-  .patch('/:_key', authorize(['palam', 'vova']), updateOrder)
+  .put('/:_key', authorize(['palam', 'vova']), updateOrder)
   .delete('/:_key', authorize(['palam', 'vova']), deleteOrder);
 
 module.exports = router.routes();
