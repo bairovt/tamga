@@ -62,8 +62,8 @@ async function getOrder(ctx) {
 
 async function createOrder(ctx) {
   const { createOrderDto } = ctx.request.body;
-  orderData.status = 'NEW';
   let orderData = Joi.attempt(createOrderDto, orderSchema, { stripUnknown: true });
+  orderData.status = 'NEW';
   orderData.createdBy = ctx.state.user._id;
   orderData.createdAt = new Date();
   const order = await db.collection('Orders').save(orderData);

@@ -11,10 +11,7 @@ const productSchema = Joi.object().keys({
     .empty('')
     .required(),
   name: Joi.string().trim().min(3).max(555).required(),
-  packType: Joi.string()
-    .valid(...packTypeValues)
-    .empty('')
-    .allow(null),
+  packType: Joi.string().allow('').max(255),
   measure: Joi.string()
     .valid(...measureUnits)
     .required(),
