@@ -83,7 +83,7 @@ async function createProductsFromCsv(ctx) {
     const createProductDto = {
       tnved: cols[0],
       name: cols[1],
-      packType: null, //cols[2],
+      packType: cols[2],
       measure: cols[3],
       seats: cols[4],
       qty: cols[5],
