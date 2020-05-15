@@ -4,7 +4,7 @@ const aql = require('arangojs').aql;
 const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
-const productSchema = require('../models/schemas/productSchema');
+const { nameSchema, productSchema } = require('../models/schemas/productSchema');
 
 const router = new Router();
 
@@ -46,14 +46,23 @@ async function getProduct(ctx) {
 
 async function createProduct(ctx) {
   const { createProductDto, order_id } = ctx.request.body;
+  let nameData = Joi.attempt(createProductDto, nameSchema, {
+    stripUnknown: true,
+  });
   let productData = Joi.attempt(createProductDto, productSchema, {
     stripUnknown: true,
   });
+
+  nameData.createdBy = ctx.state.user._id;
+  nameData.createdAt = new Date();
+  const nomenMeta = await db.collection('Nomens').save(nameData, true);
+
   productData.order_id = order_id;
+  productData.name_id = nomenMeta._id;
   productData.createdBy = ctx.state.user._id;
   productData.createdAt = new Date();
-  const productsCollection = db.collection('Products');
-  const product = await productsCollection.save(productData, true);
+  const productMeta = await db.collection('Products').save(productData, true);
+  const product = { ...nomenMeta.new, ...productMeta.new };
   ctx.body = {
     product,
   };
@@ -75,7 +84,7 @@ async function createProductsFromCsv(ctx) {
       lines[idx] = line.replace(/\t\t\t/, '\t');
     });
   }
-  const productsCollection = db.collection('Products');
+  const productsColl = db.collection('Products');
   const products = [];
 
   lines.forEach((line, idx, lines) => {
@@ -102,7 +111,7 @@ async function createProductsFromCsv(ctx) {
     products.push(productData);
   });
 
-  await productsCollection.import(products, { type: 'documents', complete: true });
+  await productsColl.import(products, { type: 'documents', complete: true });
   ctx.body = {
     productsCnt: products.length,
   };
@@ -111,16 +120,13 @@ async function createProductsFromCsv(ctx) {
 async function updateProduct(ctx) {
   const { _key } = ctx.params;
   const { user } = ctx.state;
-  const productsCollection = db.collection('Products');
-  const product = productsCollection.document(_key);
-  if (!product) ctx.throw(404);
   let { updateProductDto } = ctx.request.body;
   let productData = Joi.attempt(updateProductDto, productSchema, {
     stripUnknown: true,
   });
   productData.updatedBy = user._id;
   productData.updatedAt = new Date();
-  const meta = await productsCollection.update(_key, productData, true);
+  const meta = await db.collection('Products').update(_key, productData, true);
   ctx.body = {
     meta,
   };

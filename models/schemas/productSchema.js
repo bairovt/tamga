@@ -3,18 +3,21 @@ const { packTypes, measureUnits } = require('../../consts');
 
 const packTypeValues = packTypes.map((pack) => pack.value);
 
-const productSchema = Joi.object().keys({
-  // tnved: Joi.string().trim().regex(/^\d+$/).min(10).max(10).empty('').required(),
+const nameSchema = Joi.object().keys({
   tnved: Joi.string()
     .trim()
     .regex(/^[\d+]{10,10}$/)
     .empty('')
     .required(),
   name: Joi.string().trim().min(3).max(555).required(),
-  packType: Joi.string().allow('').max(255),
   measure: Joi.string()
     .valid(...measureUnits)
     .required(),
+  comment: Joi.string().trim().min(1).max(5000).empty('').allow(null),
+});
+
+const productSchema = Joi.object().keys({
+  packType: Joi.string().allow('').max(255),
   seats: Joi.number().min(0).empty('').default(0),
   qty: Joi.number().min(0).empty('').default(0),
   wnetto: Joi.number().min(0).empty('').default(0),
@@ -23,4 +26,4 @@ const productSchema = Joi.object().keys({
   comment: Joi.string().trim().min(1).max(5000).empty('').allow(null),
 });
 
-module.exports = productSchema;
+module.exports = { nameSchema, productSchema };
