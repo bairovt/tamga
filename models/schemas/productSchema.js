@@ -19,7 +19,7 @@ const productSchema = Joi.object().keys({
   qty: Joi.number().min(0).empty('').default(0),
   wnetto: Joi.number().min(0).empty('').default(0),
   wbrutto: Joi.number().min(0).empty('').default(0),
-  cvi: Joi.number().min(0).empty('').default(0),
+  its: Joi.number().min(0).empty('').default(0),
   comment: Joi.string().trim().min(1).max(5000).empty('').allow(null),
 });
 

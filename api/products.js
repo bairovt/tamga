@@ -89,7 +89,7 @@ async function createProductsFromCsv(ctx) {
       qty: cols[5],
       wnetto: cols[6],
       wbrutto: cols[7],
-      cvi: cols[8],
+      its: cols[8],
       comment: originalLines[idx],
     };
     let productData = Joi.attempt(createProductDto, productSchema, {
