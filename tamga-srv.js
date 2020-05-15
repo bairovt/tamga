@@ -13,7 +13,7 @@ const server = http.createServer(app.callback());
 /* middlewares */
 app.use(cors); // use cors to allow requests from different origin (localhost:8080 - on dev e.g.)
 // if (app.env === 'development') app.use(logger())
-app.use(logger())
+app.use(logger());
 
 app.use(require('koa-bodyparser')());
 app.use(errorHandler);
@@ -28,7 +28,7 @@ router
   .use('/api/clients', require('./api/clients'))
   .use('/api/orders', require('./api/orders'))
   .use('/api/products', require('./api/products'))
-
+  .use('/api/nomenclature', require('./api/nomenclature'));
 
 app.use(router.routes());
 
@@ -38,5 +38,5 @@ if (module.parent) {
 } else {
   let port = config.server.port;
   server.listen(port);
-  console.log(`tamga-srv listening on port ${port}`)
+  console.log(`tamga-srv listening on port ${port}`);
 }

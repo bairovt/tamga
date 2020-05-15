@@ -4,7 +4,7 @@ const aql = require('arangojs').aql;
 const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
-const { nameSchema, productSchema } = require('../models/schemas/productSchema');
+const { nomenSchema, productSchema } = require('../models/schemas/productSchema');
 
 const router = new Router();
 
@@ -46,7 +46,7 @@ async function getProduct(ctx) {
 
 async function createProduct(ctx) {
   const { createProductDto, order_id } = ctx.request.body;
-  let nameData = Joi.attempt(createProductDto, nameSchema, {
+  let nameData = Joi.attempt(createProductDto, nomenSchema, {
     stripUnknown: true,
   });
   let productData = Joi.attempt(createProductDto, productSchema, {
@@ -154,12 +154,12 @@ async function deleteProducts(ctx) {
 }
 
 router
-  .post('/', authorize(['palam', 'vova']), createProduct)
+  .post('/', authorize(['logist']), createProduct)
   .get('/', findProducts)
   .get('/:_key', getProduct)
-  .put('/:_key', authorize(['palam', 'vova']), updateProduct)
-  .delete('/:_key', authorize(['palam', 'vova']), deleteProduct)
-  .delete('/', authorize(['palam', 'vova']), deleteProducts)
-  .post('/csv', authorize(['palam', 'vova']), createProductsFromCsv);
+  .put('/:_key', authorize(['logist']), updateProduct)
+  .delete('/:_key', authorize(['logist']), deleteProduct)
+  .delete('/', authorize(['logist']), deleteProducts)
+  .post('/csv', authorize(['logist']), createProductsFromCsv);
 
 module.exports = router.routes();

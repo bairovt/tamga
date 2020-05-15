@@ -110,10 +110,10 @@ async function deleteOrder(ctx) {
 }
 
 router
-  .post('/', authorize(['palam', 'vova']), createOrder)
+  .post('/', authorize(['logist']), createOrder)
   .get('/', findOrders)
   .get('/:_key', getOrder)
-  .put('/:_key', authorize(['palam', 'vova']), updateOrder)
-  .delete('/:_key', authorize(['palam', 'vova']), deleteOrder);
+  .put('/:_key', authorize(['logist']), updateOrder)
+  .delete('/:_key', authorize(['logist']), deleteOrder);
 
 module.exports = router.routes();

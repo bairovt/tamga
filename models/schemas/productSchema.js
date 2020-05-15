@@ -3,7 +3,7 @@ const { packTypes, measureUnits } = require('../../consts');
 
 const packTypeValues = packTypes.map((pack) => pack.value);
 
-const nameSchema = Joi.object().keys({
+const nomenSchema = Joi.object().keys({
   tnved: Joi.string()
     .trim()
     .regex(/^[\d+]{10,10}$/)
@@ -26,4 +26,4 @@ const productSchema = Joi.object().keys({
   comment: Joi.string().trim().min(1).max(5000).empty('').allow(null),
 });
 
-module.exports = { nameSchema, productSchema };
+module.exports = { nomenSchema, productSchema };

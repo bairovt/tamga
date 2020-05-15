@@ -79,10 +79,10 @@ async function deleteClient(ctx) {
 }
 
 router
-  .post('/', authorize(['palam', 'vova']), createClient)
+  .post('/', authorize(['logist']), createClient)
   .get('/', findClients)
   .get('/:_key', getClient)
-  .patch('/:_key', authorize(['palam', 'vova']), updateClient)
-  .delete('/:_key', authorize(['palam', 'vova']), deleteClient);
+  .patch('/:_key', authorize(['logist']), updateClient)
+  .delete('/:_key', authorize(['logist']), deleteClient);
 
 module.exports = router.routes();
