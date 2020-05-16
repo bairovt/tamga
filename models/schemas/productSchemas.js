@@ -24,6 +24,9 @@ const productSchema = Joi.object().keys({
   wbrutto: Joi.number().min(0).empty('').default(0),
   its: Joi.number().min(0).empty('').default(0),
   comment: Joi.string().trim().min(1).max(5000).empty('').allow(null),
+  fromCsv: Joi.boolean().allow(null),
 });
 
-module.exports = { nomenSchema, productSchema };
+const combinedProductSchema = nomenSchema.concat(productSchema);
+
+module.exports = { nomenSchema, productSchema, combinedProductSchema };

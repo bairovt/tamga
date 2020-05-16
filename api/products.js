@@ -4,9 +4,9 @@ const aql = require('arangojs').aql;
 const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
-const { nomenSchema, productSchema } = require('../models/schemas/productSchema');
-const Nomen = require('../models/Nomen');
-const Product = require('../models/Product');
+const { productSchema, combinedProductSchema } = require('../models/schemas/productSchemas');
+
+const productSrvices = require('../services/products');
 
 const router = new Router();
 
@@ -47,21 +47,16 @@ async function getProduct(ctx) {
 }
 
 async function createProduct(ctx) {
-  const { createProductDto, order_id } = ctx.request.body;
-  const nomenData = Joi.attempt(createProductDto, nomenSchema, {
-    stripUnknown: true,
-  });
-  const productData = Joi.attempt(createProductDto, productSchema, {
+  let { createProductDto, order_id } = ctx.request.body;
+
+  createProductDto = Joi.attempt(createProductDto, combinedProductSchema, {
     stripUnknown: true,
   });
 
-  const nomen = await Nomen.getOrCreate(nomenData, ctx.state.user);
+  const product = await productSrvices.createProduct(ctx.state.user, createProductDto, order_id);
 
-  productData.nomen_id = nomen._id;
-  productData.order_id = order_id;
-  const product = await Product.create(productData, ctx.state.user);
   ctx.body = {
-    product: { ...nomen, ...product },
+    product,
   };
 }
 
@@ -98,7 +93,7 @@ async function createProductsFromCsv(ctx) {
       its: cols[8],
       comment: originalLines[idx],
     };
-    let productData = Joi.attempt(createProductDto, productSchema, {
+    let productData = Joi.attempt(createProductDto, combinedProductSchema, {
       stripUnknown: true,
     });
     productData.order_id = order_id;
@@ -118,7 +113,7 @@ async function updateProduct(ctx) {
   const { _key } = ctx.params;
   const { user } = ctx.state;
   let { updateProductDto } = ctx.request.body;
-  let productData = Joi.attempt(updateProductDto, productSchema, {
+  let productData = Joi.attempt(updateProductDto, combinedProductSchema, {
     stripUnknown: true,
   });
   productData.updatedBy = user._id;
