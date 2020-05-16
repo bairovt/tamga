@@ -16,19 +16,25 @@ class Nomen {
   static async create(nomenData, user) {
     nomenData.createdBy = user._id;
     nomenData.createdAt = new Date();
-    return await nomensColl.save(nomenData, true);
+    return (await nomensColl.save(nomenData, true)).new;
+  }
+
+  static async findByName(name) {
+    let nomen = await nomensColl.byExample({ name }).then((cursor) => cursor.next());
+    return nomen ? new Nomen(nomen) : null;
+  }
+
+  static async getOrCreate(nomenData, user) {
+    let nomen;
+    nomen = await Nomen.findByName(nomenData.name);
+    if (!nomen) {
+      nomen = Nomen.create(nomenData, user);
+    }
+    return nomen;
   }
 
   static async get(_key) {
     const nomen = await nomensColl.document(_key);
-    return nomen ? new Nomen(nomen) : null;
-  }
-
-  static async findByName(name) {
-    let nomen;
-    try {
-      nomen = await nomensColl.firstExample({ name });
-    } catch (e) {}
     return nomen ? new Nomen(nomen) : null;
   }
 }

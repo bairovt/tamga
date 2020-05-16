@@ -54,10 +54,7 @@ async function createProduct(ctx) {
     stripUnknown: true,
   });
 
-  let nomen = await Nomen.findByName(nomenData.name);
-  if (!nomen) {
-    nomen = (await Nomen.create(nomenData, ctx.state.user)).new;
-  }
+  const nomen = await Nomen.getOrCreate(nomenData, ctx.state.user);
 
   productData.order_id = order_id;
   productData.nomen_id = nomen._id;
