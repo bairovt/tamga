@@ -1,7 +1,7 @@
 const Joi = require('@hapi/joi');
 const { packTypes, measureUnits } = require('../../consts');
 
-const packTypeValues = packTypes.map((pack) => pack.value);
+// const packTypeValues = packTypes.map((pack) => pack.value);
 
 const nomenSchema = Joi.object().keys({
   tnved: Joi.string()

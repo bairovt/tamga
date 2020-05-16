@@ -5,6 +5,7 @@ const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
 const { nomenSchema, productSchema } = require('../models/schemas/productSchema');
+const Nomen = require('../models/Nomen');
 
 const router = new Router();
 
@@ -46,23 +47,24 @@ async function getProduct(ctx) {
 
 async function createProduct(ctx) {
   const { createProductDto, order_id } = ctx.request.body;
-  let nameData = Joi.attempt(createProductDto, nomenSchema, {
+  const nomenData = Joi.attempt(createProductDto, nomenSchema, {
     stripUnknown: true,
   });
-  let productData = Joi.attempt(createProductDto, productSchema, {
+  const productData = Joi.attempt(createProductDto, productSchema, {
     stripUnknown: true,
   });
 
-  nameData.createdBy = ctx.state.user._id;
-  nameData.createdAt = new Date();
-  const nomenMeta = await db.collection('Nomens').save(nameData, true);
+  let nomen = await Nomen.findByName(nomenData.name);
+  if (!nomen) {
+    nomen = (await Nomen.create(nomenData, ctx.state.user)).new;
+  }
 
   productData.order_id = order_id;
-  productData.name_id = nomenMeta._id;
+  productData.nomen_id = nomen._id;
   productData.createdBy = ctx.state.user._id;
   productData.createdAt = new Date();
   const productMeta = await db.collection('Products').save(productData, true);
-  const product = { ...nomenMeta.new, ...productMeta.new };
+  const product = { ...nomen, ...productMeta.new };
   ctx.body = {
     product,
   };

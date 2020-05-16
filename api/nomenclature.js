@@ -5,6 +5,7 @@ const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
 const { nomenSchema } = require('../models/schemas/productSchema');
+const Nomen = require('../models/Nomen');
 
 const router = new Router();
 
@@ -30,9 +31,7 @@ async function createNomen(ctx) {
   let nomenData = Joi.attempt(createNomenDto, nomenSchema, {
     stripUnknown: true,
   });
-  nomenData.createdBy = ctx.state.user._id;
-  nomenData.createdAt = new Date();
-  const nomenMeta = await db.collection('Nomens').save(nomenData, true);
+  const nomenMeta = await Nomen.create(nomenData, ctx.state.user);
   ctx.body = {
     nomen: nomenMeta.new,
   };

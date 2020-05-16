@@ -46,7 +46,7 @@ async function getOrder(ctx) {
   let products = await db
     .query(
       aql`FOR product IN Products
-          LET name = DOCUMENT(product.name_id)
+          LET name = DOCUMENT(product.nomen_id)
           FILTER product.order_id == ${'Orders/' + _key}
           SORT product.createdAt DESC
           RETURN MERGE(product, {tnved: name.tnved, name: name.name, measure: name.measure})`
