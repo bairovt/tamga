@@ -6,6 +6,7 @@ const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
 const { nomenSchema, productSchema } = require('../models/schemas/productSchema');
 const Nomen = require('../models/Nomen');
+const Product = require('../models/Product');
 
 const router = new Router();
 
@@ -56,14 +57,11 @@ async function createProduct(ctx) {
 
   const nomen = await Nomen.getOrCreate(nomenData, ctx.state.user);
 
-  productData.order_id = order_id;
   productData.nomen_id = nomen._id;
-  productData.createdBy = ctx.state.user._id;
-  productData.createdAt = new Date();
-  const productMeta = await db.collection('Products').save(productData, true);
-  const product = { ...nomen, ...productMeta.new };
+  productData.order_id = order_id;
+  const product = await Product.create(productData, ctx.state.user);
   ctx.body = {
-    product,
+    product: { ...nomen, ...product },
   };
 }
 

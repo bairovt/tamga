@@ -5,12 +5,12 @@ const { packTypes, measureUnits } = require('../consts');
 const nomensColl = db.collection('Nomens');
 
 class Nomen {
-  constructor(user) {
-    this._id = user._id;
-    this.tnved = user.tnved;
-    this.name = user.name;
-    this.measure = user.measure;
-    this.comment = user.comment;
+  constructor(nomen) {
+    this._id = nomen._id;
+    this.tnved = nomen.tnved;
+    this.name = nomen.name;
+    this.measure = nomen.measure;
+    this.comment = nomen.comment;
   }
 
   static async create(nomenData, user) {
