@@ -110,7 +110,7 @@ async function updateProduct(ctx) {
   const { _key } = ctx.params;
   const { user } = ctx.state;
   let { updateProductDto } = ctx.request.body;
-  let productData = Joi.attempt(updateProductDto, combinedProductSchema, {
+  let productData = Joi.attempt(updateProductDto, productSchema, {
     stripUnknown: true,
   });
   productData.updatedBy = user._id;
