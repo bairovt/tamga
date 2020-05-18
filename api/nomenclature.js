@@ -11,10 +11,13 @@ const router = new Router();
 
 async function findNomens(ctx) {
   let { search = '' } = ctx.query;
+  search = search.trim();
+  search = search.replace(/\s/g, ',prefix:');
+  search = search ? 'prefix:' + search : search;
+
   let nomens = await db
     .query(
-      aql`FOR nomen IN Nomens          
-          FILTER ${!!search} ? REGEX_TEST(nomen.name, ${search}, true) : true
+      aql`FOR nomen IN ${!!search} ? FULLTEXT(Nomens, "name", ${search}) : Nomens
           SORT nomen.createdAt DESC
           RETURN MERGE(nomen)`
     )
