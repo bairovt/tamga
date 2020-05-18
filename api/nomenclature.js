@@ -4,7 +4,7 @@ const aql = require('arangojs').aql;
 const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
-const { nomenSchema } = require('../models/schemas/productSchemas');
+const { nomenSchema } = require('../schemas/productSchemas');
 const Nomen = require('../models/Nomen');
 
 const router = new Router();

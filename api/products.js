@@ -4,7 +4,7 @@ const aql = require('arangojs').aql;
 const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
-const { productSchema, combinedProductSchema } = require('../models/schemas/productSchemas');
+const { productSchema, combinedProductSchema } = require('../schemas/productSchemas');
 
 const productSrvices = require('../services/products');
 
@@ -47,13 +47,13 @@ async function getProduct(ctx) {
 }
 
 async function createProduct(ctx) {
-  let { createProductDto, order_id } = ctx.request.body;
+  let { createProductDto } = ctx.request.body;
 
   createProductDto = Joi.attempt(createProductDto, combinedProductSchema, {
     stripUnknown: true,
   });
 
-  const product = await productSrvices.createProduct(ctx.state.user, createProductDto, order_id);
+  const product = await productSrvices.createProduct(ctx.state.user, createProductDto);
 
   ctx.body = {
     product,
@@ -76,12 +76,11 @@ async function createProductsFromCsv(ctx) {
       lines[idx] = line.replace(/\t\t\t/, '\t');
     });
   }
-  const productsColl = db.collection('Products');
   const products = [];
-
   lines.forEach((line, idx, lines) => {
     const cols = line.split('\t');
     const createProductDto = {
+      order_id,
       tnved: cols[0],
       name: cols[1],
       packType: cols[2],
@@ -92,18 +91,16 @@ async function createProductsFromCsv(ctx) {
       wbrutto: cols[7],
       its: cols[8],
       comment: originalLines[idx],
+      fromCsv: true,
     };
-    let productData = Joi.attempt(createProductDto, combinedProductSchema, {
-      stripUnknown: true,
-    });
-    productData.order_id = order_id;
-    productData.createdBy = ctx.state.user._id;
-    productData.createdAt = new Date();
-    productData.fromCsv = true;
+    let productData = Joi.attempt(createProductDto, combinedProductSchema);
     products.push(productData);
   });
 
-  await productsColl.import(products, { type: 'documents', complete: true });
+  for await (let productData of products) {
+    await productSrvices.createProduct(ctx.state.user, productData);
+  }
+
   ctx.body = {
     productsCnt: products.length,
   };

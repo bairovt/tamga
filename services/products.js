@@ -1,9 +1,9 @@
 const Joi = require('@hapi/joi');
 const Nomen = require('../models/Nomen');
 const Product = require('../models/Product');
-const { nomenSchema, productSchema } = require('../models/schemas/productSchemas');
+const { nomenSchema, productSchema } = require('../schemas/productSchemas');
 
-async function createProduct(user, createProductDto, order_id) {
+async function createProduct(user, createProductDto) {
   const nomenData = Joi.attempt(createProductDto, nomenSchema, {
     stripUnknown: true,
   });
@@ -14,7 +14,6 @@ async function createProduct(user, createProductDto, order_id) {
   const nomen = await Nomen.getOrCreate(nomenData, user);
 
   productData.nomen_id = nomen._id;
-  productData.order_id = order_id;
   const product = await Product.create(productData, user);
   return {
     product: { ...nomen, ...product },

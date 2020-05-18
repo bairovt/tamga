@@ -1,5 +1,6 @@
 const Joi = require('@hapi/joi');
-const { packTypes, measureUnits } = require('../../consts');
+const { packTypes, measureUnits } = require('../consts');
+const { arangoIdSchema } = require('./common');
 
 // const packTypeValues = packTypes.map((pack) => pack.value);
 
@@ -17,6 +18,7 @@ const nomenSchema = Joi.object().keys({
 });
 
 const productSchema = Joi.object().keys({
+  order_id: arangoIdSchema,
   packType: Joi.string().allow('').max(255),
   seats: Joi.number().min(0).empty('').default(0),
   qty: Joi.number().min(0).empty('').default(0),
