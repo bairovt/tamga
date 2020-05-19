@@ -15,6 +15,7 @@ const nomenSchema = Joi.object().keys({
     .valid(...measureUnits)
     .required(),
   comment: Joi.string().trim().min(1).max(5000).empty('').allow(null),
+  fromCsv: Joi.boolean().allow(null),
 });
 
 const productSchema = Joi.object().keys({

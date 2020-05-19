@@ -50,7 +50,7 @@ async function getProduct(ctx) {
 async function createProduct(ctx) {
   let { createProductDto } = ctx.request.body;
 
-  productData = Joi.attempt(createProductDto, productSchema, {
+  const productData = Joi.attempt(createProductDto, productSchema, {
     stripUnknown: true,
   });
   const nomen = await db.collection('Nomens').document(productData.nomen_id, { graceful: true });
@@ -86,6 +86,7 @@ async function createProductsFromCsv(ctx) {
       tnved: cols[0],
       name: cols[1],
       measure: cols[3],
+      fromCsv: true,
     };
     let nomenData = Joi.attempt(createNomenDto, nomenSchema);
     const createProductDto = {
