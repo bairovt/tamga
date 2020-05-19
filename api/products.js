@@ -4,7 +4,8 @@ const aql = require('arangojs').aql;
 const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
-const { productSchema, combinedProductSchema } = require('../schemas/productSchemas');
+const { productSchema, nomenSchema } = require('../schemas/productSchemas');
+const Product = require('../models/Product');
 
 const productSrvices = require('../services/products');
 
@@ -49,14 +50,16 @@ async function getProduct(ctx) {
 async function createProduct(ctx) {
   let { createProductDto } = ctx.request.body;
 
-  createProductDto = Joi.attempt(createProductDto, combinedProductSchema, {
+  productData = Joi.attempt(createProductDto, productSchema, {
     stripUnknown: true,
   });
+  const nomen = await db.collection('Nomens').document(productData.nomen_id, { graceful: true });
+  if (!nomen) ctx.throw(404, `Nomenclature ${productData.nomen_id} not found`);
 
-  const product = await productSrvices.createProduct(ctx.state.user, createProductDto);
+  const product = await Product.create(productData, ctx.state.user);
 
   ctx.body = {
-    product,
+    product: { ...nomen, ...product },
   };
 }
 
@@ -79,12 +82,15 @@ async function createProductsFromCsv(ctx) {
   const products = [];
   lines.forEach((line, idx, lines) => {
     const cols = line.split('\t');
-    const createProductDto = {
-      order_id,
+    const createNomenDto = {
       tnved: cols[0],
       name: cols[1],
-      packType: cols[2],
       measure: cols[3],
+    };
+    let nomenData = Joi.attempt(createNomenDto, nomenSchema);
+    const createProductDto = {
+      order_id,
+      packType: cols[2],
       seats: cols[4],
       qty: cols[5],
       wnetto: cols[6],
@@ -93,12 +99,12 @@ async function createProductsFromCsv(ctx) {
       comment: originalLines[idx],
       fromCsv: true,
     };
-    let productData = Joi.attempt(createProductDto, combinedProductSchema);
-    products.push(productData);
+    let productData = Joi.attempt(createProductDto, productSchema);
+    products.push({ nomenData, productData });
   });
 
-  for await (let productData of products) {
-    await productSrvices.createProduct(ctx.state.user, productData);
+  for await (let data of products) {
+    await productSrvices.createNomenProduct(ctx, data.nomenData, data.productData);
   }
 
   ctx.body = {

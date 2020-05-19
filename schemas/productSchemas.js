@@ -10,7 +10,7 @@ const nomenSchema = Joi.object().keys({
     .regex(/^[\d+]{10,10}$/)
     .empty('')
     .required(),
-  name: Joi.string().trim().min(3).max(555).required(),
+  name: Joi.string().trim().uppercase({ force: true }).min(3).max(555).required(),
   measure: Joi.string()
     .valid(...measureUnits)
     .required(),
@@ -19,6 +19,7 @@ const nomenSchema = Joi.object().keys({
 
 const productSchema = Joi.object().keys({
   order_id: arangoIdSchema,
+  nomen_id: arangoIdSchema,
   packType: Joi.string().allow('').max(255),
   seats: Joi.number().min(0).empty('').default(0),
   qty: Joi.number().min(0).empty('').default(0),

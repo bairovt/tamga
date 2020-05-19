@@ -1,6 +1,5 @@
 'use strict';
 const db = require('../lib/arangodb');
-const { packTypes, measureUnits } = require('../consts');
 
 const nomensColl = db.collection('Nomens');
 

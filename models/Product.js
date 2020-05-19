@@ -17,7 +17,7 @@ class Product {
   }
 
   static async get(_key) {
-    const product = await productsColl.document(_key);
+    const product = await productsColl.document(_key, { graceful: true });
     return product ? new Product(product) : null;
   }
 }
