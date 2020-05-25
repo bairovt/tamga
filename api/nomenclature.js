@@ -16,6 +16,7 @@ async function findNomens(ctx) {
   search = search ? 'prefix:' + search : search;
 
   let nomens = await db
+    // an arango error is thown when search starts with a comma
     .query(
       aql`FOR nomen IN ${!!search} ? FULLTEXT(Nomens, "name", ${search}) : Nomens
           SORT nomen.createdAt DESC
@@ -34,9 +35,9 @@ async function createNomen(ctx) {
   let nomenData = Joi.attempt(createNomenDto, nomenSchema, {
     stripUnknown: true,
   });
-  const nomenMeta = await Nomen.create(nomenData, ctx.state.user);
+  const nomen = await Nomen.create(nomenData, ctx.state.user);
   ctx.body = {
-    nomen: nomenMeta.new,
+    nomen,
   };
 }
 
