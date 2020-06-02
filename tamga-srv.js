@@ -28,7 +28,9 @@ router
   .use('/api/clients', require('./api/clients'))
   .use('/api/orders', require('./api/orders'))
   .use('/api/products', require('./api/products'))
-  .use('/api/nomenclature', require('./api/nomenclature'));
+  .use('/api/nomenclature', require('./api/nomenclature'))
+  .use('/api/stores', require('./api/stores'))
+  .use('/api/shifts', require('./api/shifts'));
 
 app.use(router.routes());
 
