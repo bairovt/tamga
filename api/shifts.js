@@ -5,8 +5,8 @@ const Product = require('../models/Product');
 
 const router = new Router();
 
-async function takeOnStore(ctx) {
-  const { client_id, order_id, store_id } = ctx.request.body;
+async function takeOnRepo(ctx) {
+  const { client_id, order_id, repo_id } = ctx.request.body;
   const ordersColl = db.collection('Orders');
   const order = await ordersColl.document(order_id);
   if (order.status !== 'NEW') ctx.throw(400, 'Order status should be NEW');
@@ -17,7 +17,7 @@ async function takeOnStore(ctx) {
   for (let product of products) {
     let shift = {
       _from: client_id,
-      _to: store_id,
+      _to: repo_id,
       order_id: order_id,
       product_id: product._id,
       qty: product.qty,
@@ -37,6 +37,6 @@ async function takeOnStore(ctx) {
   };
 }
 
-router.post('/take-on-store', takeOnStore);
+router.post('/take-on-repo', takeOnRepo);
 
 module.exports = router.routes();

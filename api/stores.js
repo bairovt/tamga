@@ -5,29 +5,34 @@ const Router = require('koa-router');
 
 const router = new Router();
 
-async function getStores(ctx) {
-  let stores = await db
+async function getRepos(ctx) {
+  let repos = await db
     .query(
-      aql`FOR store IN Stores          
-          SORT store.name DESC
-          RETURN store`
+      aql`FOR repo IN Repos          
+          SORT repo.name DESC
+          RETURN repo`
     )
     .then((cursor) => {
       return cursor.all();
     });
   ctx.body = {
-    stores,
+    repos,
   };
 }
 
-async function getStore(ctx) {
+async function getRepo(ctx) {
   const { _key } = ctx.params;
-  const store = await db.collection('Stores').document(_key);
+  const repo = await db.collection('Repos').document(_key);
+  ctx.body = {
+    repo,
+  };
+}
+
   ctx.body = {
     store,
   };
 }
 
-router.get('/', getStores).get('/:_key', getStore);
+router.get('/', getRepos).get('/:_key', getRepo);
 
 module.exports = router.routes();
