@@ -91,7 +91,7 @@ async function createProductsFromCsv(ctx) {
     let nomenData = Joi.attempt(createNomenDto, nomenSchema);
     const createProductDto = {
       order_id,
-      packType: cols[2],
+      pack: cols[2],
       seats: cols[4],
       qty: cols[5],
       wnetto: cols[6],
