@@ -36,9 +36,13 @@ async function getRepoProducts(ctx) {
   const products = await db
     .query(
       aql`FOR shift IN shifts
-          LET product = DOCUMENT(shift.product_id)                    
+          LET product = DOCUMENT(shift.product_id)
+          LET nomen = DOCUMENT(product.nomen_id)                    
           RETURN {
-            name: DOCUMENT(product.nomen_id), 
+            name: nomen.name,
+            measure: nomen.measure,             
+            its: product.its,             
+            pack: product.pack,             
             qty: shift.qty,
             seats: shift.seats 
           }`
