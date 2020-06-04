@@ -6,36 +6,36 @@ const { getDirectedShifts, groupShiftsByProduct, balance } = require('../service
 
 const router = new Router();
 
-async function getRepos(ctx) {
-  let repos = await db
+async function getBundles(ctx) {
+  let bundles = await db
     .query(
-      aql`FOR repo IN Repo          
-          SORT repo.name DESC
-          RETURN repo`
+      aql`FOR bundle IN Bundle          
+          SORT bundle.name DESC
+          RETURN bundle`
     )
     .then((cursor) => {
       return cursor.all();
     });
   ctx.body = {
-    repos,
+    bundles,
   };
 }
 
-async function getRepo(ctx) {
+async function getBundle(ctx) {
   const { _key } = ctx.params;
-  const repo = await db.collection('Repo').document(_key);
+  const bundle = await db.collection('Bundle').document(_key);
   ctx.body = {
-    repo,
+    bundle,
   };
 }
 
-async function getRepoProducts(ctx) {
+async function getBundleProducts(ctx) {
   const { _key } = ctx.params;
 
-  const repo = await db.collection('Repo').document(_key);
+  const bundle = await db.collection('Bundle').document(_key);
 
-  const toShifts = await getDirectedShifts('to', repo._id);
-  const fromShifts = await getDirectedShifts('from', repo._id);
+  const toShifts = await getDirectedShifts('to', bundle._id);
+  const fromShifts = await getDirectedShifts('from', bundle._id);
 
   const toProducts = groupShiftsByProduct(toShifts);
   const fromProducts = groupShiftsByProduct(fromShifts);
@@ -43,11 +43,11 @@ async function getRepoProducts(ctx) {
   const products = balance(toProducts, fromProducts);
 
   ctx.body = {
-    repo,
+    bundle,
     products,
   };
 }
 
-router.get('/', getRepos).get('/:_key', getRepo).get('/:_key/products', getRepoProducts);
+router.get('/', getBundles).get('/:_key', getBundle).get('/:_key/products', getBundleProducts);
 
 module.exports = router.routes();
