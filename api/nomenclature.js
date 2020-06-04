@@ -18,7 +18,7 @@ async function findNomens(ctx) {
   let nomens = await db
     // an arango error is thown when search starts with a comma
     .query(
-      aql`FOR nomen IN ${!!search} ? FULLTEXT(Nomens, "name", ${search}) : Nomens
+      aql`FOR nomen IN ${!!search} ? FULLTEXT(Nomen, "name", ${search}) : Nomen
           SORT nomen.createdAt DESC
           RETURN MERGE(nomen)`
     )
@@ -50,7 +50,7 @@ async function updateNomen(ctx) {
   });
   nomenData.updatedBy = user._id;
   nomenData.updatedAt = new Date();
-  const meta = await db.collection('Nomens').update(_key, nomenData, true);
+  const meta = await db.collection('Nomen').update(_key, nomenData, true);
   ctx.body = {
     meta,
   };
@@ -59,7 +59,7 @@ async function updateNomen(ctx) {
 async function deleteNomen(ctx) {
   // todo: verify deletion of the nomen
   const { _key } = ctx.params;
-  await db.collection('Nomens').remove(_key);
+  await db.collection('Nomen').remove(_key);
   ctx.body = {
     result: 'OK',
   };

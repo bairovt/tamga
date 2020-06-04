@@ -15,9 +15,9 @@ async function findProducts(ctx) {
   let { search = '', order_key = '' } = ctx.query;
   let products = await db
     .query(
-      aql`FOR product IN Products
+      aql`FOR product IN Product
           LET order = DOCUMENT(product.order_id)
-          FILTER ${!!order_key} ? product.order_id == ${'Clients/' + order_key} : true
+          FILTER ${!!order_key} ? product.order_id == ${'Client/' + order_key} : true
           FILTER ${!!search} ? REGEX_TEST(product.name, ${search}, true) : true
           SORT product.createdAt DESC
           RETURN MERGE(product, {order: order})`
@@ -34,7 +34,7 @@ async function getProduct(ctx) {
   const { _key } = ctx.params;
   let product = await db
     .query(
-      aql`FOR product IN Products
+      aql`FOR product IN Product
           FILTER product._key == ${_key}          
           RETURN MERGE(product, {order: DOCUMENT(product.order_id)})`
     )
@@ -53,7 +53,7 @@ async function createProduct(ctx) {
   const productData = Joi.attempt(createProductDto, productSchema, {
     stripUnknown: true,
   });
-  const nomen = await db.collection('Nomens').document(productData.nomen_id, { graceful: true });
+  const nomen = await db.collection('Nomen').document(productData.nomen_id, { graceful: true });
   if (!nomen) ctx.throw(404, `Nomenclature ${productData.nomen_id} not found`);
 
   const product = await Product.create(productData, ctx.state.user);
@@ -122,7 +122,7 @@ async function updateProduct(ctx) {
   });
   productData.updatedBy = user._id;
   productData.updatedAt = new Date();
-  const meta = await db.collection('Products').update(_key, productData, true);
+  const meta = await db.collection('Product').update(_key, productData, true);
   ctx.body = {
     meta,
   };
@@ -131,7 +131,7 @@ async function updateProduct(ctx) {
 async function deleteProduct(ctx) {
   // todo: verify deletion of the product
   const { _key } = ctx.params;
-  await db.collection('Products').remove(_key);
+  await db.collection('Product').remove(_key);
   ctx.body = {
     result: 'OK',
   };
@@ -141,7 +141,7 @@ async function deleteProducts(ctx) {
   // todo: make within a transaction
   // https://github.com/arangodb/arangojs/blob/master/docs/Drivers/JS/Reference/Database/Transactions.md
   const { productKeys } = ctx.request.body;
-  const productsColl = db.collection('Products');
+  const productsColl = db.collection('Product');
   const removePromises = productKeys.map((key) => productsColl.remove(key));
   await Promise.all(removePromises);
   ctx.body = {

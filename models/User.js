@@ -30,12 +30,12 @@ class User {
     validUser.status = validUser.status || 1;
     validUser.passHash = await User.hashPassword(validUser.password);
     validUser.password = undefined;
-    const usersCollection = db.collection('Users');
+    const usersCollection = db.collection('User');
     return await usersCollection.save(validUser);
   }
 
   static async get(_key) {
-    const usersCollection = db.collection('Users');
+    const usersCollection = db.collection('User');
     const user = await usersCollection.document(_key);
     return new User(user);
   }

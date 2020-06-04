@@ -13,10 +13,10 @@ async function findOrders(ctx) {
 
   let orders = await db
     .query(
-      aql`FOR order IN Orders
+      aql`FOR order IN Order
           LET client = ${!!with_client} ? DOCUMENT(order.client_id) : null
           FILTER ${!!status} ? order.status == ${status} : true
-          FILTER ${!!client_key} ? order.client_id == ${'Clients/' + client_key} : true
+          FILTER ${!!client_key} ? order.client_id == ${'Client/' + client_key} : true
           FILTER ${!!search} ? REGEX_TEST(order.info, ${search}, true) : true
           SORT order.createdAt DESC          
           RETURN MERGE(order, {client: client})`
@@ -34,7 +34,7 @@ async function getOrder(ctx) {
   // todo: const { with_products = true } = ctx.query;
   let order = await db
     .query(
-      aql`FOR order IN Orders
+      aql`FOR order IN Order
           FILTER order._key == ${_key}          
           RETURN MERGE(order, {client: DOCUMENT(order.client_id)})`
     )
@@ -45,9 +45,9 @@ async function getOrder(ctx) {
 
   let products = await db
     .query(
-      aql`FOR product IN Products
+      aql`FOR product IN Product
           LET name = DOCUMENT(product.nomen_id)
-          FILTER product.order_id == ${'Orders/' + _key}
+          FILTER product.order_id == ${'Order/' + _key}
           SORT product.createdAt DESC
           RETURN MERGE(product, {tnved: name.tnved, name: name.name, measure: name.measure})`
     )
@@ -67,7 +67,7 @@ async function createOrder(ctx) {
   orderData.status = 'NEW';
   orderData.createdBy = ctx.state.user._id;
   orderData.createdAt = new Date();
-  const order = await db.collection('Orders').save(orderData);
+  const order = await db.collection('Order').save(orderData);
   ctx.body = {
     order_key: order._key,
   };
@@ -80,7 +80,7 @@ async function updateOrder(ctx) {
   let orderData = Joi.attempt(updateOrderDto, orderSchema, { stripUnknown: true });
   orderData.updatedBy = user._id;
   orderData.updatedAt = new Date();
-  await db.collection('Orders').update(_key, orderData);
+  await db.collection('Order').update(_key, orderData);
   ctx.body = {
     result: 'OK',
   };
@@ -88,13 +88,13 @@ async function updateOrder(ctx) {
 
 async function deleteOrder(ctx) {
   const { _key } = ctx.params;
-  const ordersColl = db.collection('Orders');
+  const ordersColl = db.collection('Order');
   const order = await ordersColl.document(_key);
   if (!order) ctx.throw(404);
   let productsCount = await db
     .query(
-      aql`FOR product IN Products          
-          FILTER product.order_id == ${'Orders/' + _key}
+      aql`FOR product IN Product          
+          FILTER product.order_id == ${'Order/' + _key}
           COLLECT WITH COUNT INTO cnt
           RETURN cnt`
     )

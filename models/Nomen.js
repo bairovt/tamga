@@ -1,7 +1,7 @@
 'use strict';
 const db = require('../lib/arangodb');
 
-const nomensColl = db.collection('Nomens');
+const nomensColl = db.collection('Nomen');
 
 class Nomen {
   constructor(nomen) {

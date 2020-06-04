@@ -2,7 +2,7 @@
 const db = require('../lib/arangodb');
 const aql = require('arangojs').aql;
 
-const productsColl = db.collection('Products');
+const productsColl = db.collection('Product');
 
 class Product {
   constructor(product) {
@@ -25,7 +25,7 @@ class Product {
   static async getByOrderId(order_id) {
     let products = await db
       .query(
-        aql`FOR product IN Products
+        aql`FOR product IN Product
           FILTER product.order_id == ${order_id}
           SORT product.createdAt DESC
           RETURN product`

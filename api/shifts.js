@@ -7,7 +7,7 @@ const router = new Router();
 
 async function takeOnRepo(ctx) {
   const { client_id, order_id, repo_id } = ctx.request.body;
-  const ordersColl = db.collection('Orders');
+  const ordersColl = db.collection('Order');
   const order = await ordersColl.document(order_id);
   if (order.status !== 'NEW') ctx.throw(400, 'Order status should be NEW');
   const products = await Product.getByOrderId(order_id);
@@ -27,8 +27,8 @@ async function takeOnRepo(ctx) {
     };
     shifts.push(shift);
   }
-  const shiftsColl = db.collection('shifts');
-  await shiftsColl.import(shifts, { complete: true });
+  const shiftColl = db.collection('Shift');
+  await shiftColl.import(shifts, { complete: true });
   const status = 'TAKEN';
   await ordersColl.update(order_id, { status });
   ctx.body = {

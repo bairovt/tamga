@@ -12,7 +12,7 @@ async function findClients(ctx) {
   let search = ctx.query.search || '';
   let clients = await db
     .query(
-      aql`FOR cl IN Clients
+      aql`FOR cl IN Client
           FILTER ${!search} ? true : (REGEX_TEST(cl.name, ${search}, true) OR
             REGEX_TEST(cl.info, ${search}, true))
           SORT cl.createdAt DESC
@@ -29,7 +29,7 @@ async function findClients(ctx) {
 async function getClient(ctx) {
   const { _key } = ctx.params;
   const { user } = ctx.state;
-  const clientsCollection = db.collection('Clients');
+  const clientsCollection = db.collection('Client');
   const client = await clientsCollection.document(_key);
   if (!client) ctx.throw(404);
   // client.editable = await user.hasRoles(['palam']);
@@ -43,7 +43,7 @@ async function createClient(ctx) {
   let clientData = Joi.attempt(createClientDto, clientSchema);
   clientData.createdBy = ctx.state.user._id;
   clientData.createdAt = new Date();
-  const clientsCollection = db.collection('Clients');
+  const clientsCollection = db.collection('Client');
   const newClient = await clientsCollection.save(clientData);
   ctx.body = {
     newClientKey: newClient._key,
@@ -53,7 +53,7 @@ async function createClient(ctx) {
 async function updateClient(ctx) {
   const { _key } = ctx.params;
   const { user } = ctx.state;
-  const clientsCollection = db.collection('Clients');
+  const clientsCollection = db.collection('Client');
   const client = clientsCollection.document(_key);
   if (!client) ctx.throw(404);
   let { updateClientDto } = ctx.request.body;
@@ -68,7 +68,7 @@ async function updateClient(ctx) {
 
 async function deleteClient(ctx) {
   const { _key } = ctx.params;
-  const clientsCollection = db.collection('Clients');
+  const clientsCollection = db.collection('Client');
   const client = await clientsCollection.document(_key);
   if (!client) ctx.throw(404);
   //todo: НЕ удаляем если есть зависимости: orders, (client.findOrders('STATUS'))
