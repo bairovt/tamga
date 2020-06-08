@@ -11,7 +11,7 @@ async function getDirectedShifts(direction, storage_id) {
           LET nomen = DOCUMENT(product.nomen_id)
           FILTER ${direction === 'to'} ? shift._to == ${storage_id} : shift._from == ${storage_id}
           RETURN {
-            shift_key: shift._key,
+            _key: shift._key,
             tnved: nomen.tnved,
             name: nomen.name,
             measure: nomen.measure,

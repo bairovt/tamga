@@ -39,8 +39,9 @@ async function takeOnSklad(ctx) {
 }
 
 async function shiftTo(ctx) {
+  //todo: verify shifting completely
+  //todo: validate data; shift schema
   const { from_id, to_id, products } = ctx.request.body;
-
   const shifts = [];
   const createdBy = ctx.state.user._id;
   const createdAt = new Date();
@@ -49,8 +50,8 @@ async function shiftTo(ctx) {
       _from: from_id,
       _to: to_id,
       product_id: product.product_id,
-      qty: product.qty,
-      seats: product.seats,
+      qty: +product.qty,
+      seats: +product.seats,
       createdBy,
       createdAt,
     };
