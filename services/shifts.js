@@ -1,5 +1,6 @@
 const db = require('../lib/arangodb');
 const aql = require('arangojs').aql;
+const CustomError = require('../lib/custom-error');
 
 async function getDirectedShifts(direction, storage_id) {
   // _key: shift._key : for use as unique key in talbe
@@ -12,7 +13,7 @@ async function getDirectedShifts(direction, storage_id) {
             direction === 'to'
           } ? shift._to == ${storage_id} : shift._from == ${storage_id}                  
           RETURN {
-            _key: shift._key,
+            shift_key: shift._key,
             name: nomen.name,
             measure: nomen.measure,             
             product_id: product._id,             
@@ -52,8 +53,17 @@ function balance(toProducts, fromProducts) {
     );
     if (fromProduct) {
       product.qty = toProduct.qty - fromProduct.qty;
+      product.seats = toProduct.seats - fromProduct.seats;
     }
-    products.push(product);
+    if (product.qty < 0) throw new CustomError(400, 'qty < 0 in balance');
+    if (product.seats < 0) throw new CustomError(400, 'seats < 0 in balance');
+    if (product.qty === 0 && product.seats > 0)
+      throw new CustomError(400, 'qty = 0 & seats > 0 in balance');
+    if (product.qty > 0 && product.seats === 0)
+      throw new CustomError(400, 'qty > 0 & seats = 0 in balance');
+    if (!(product.qty === 0 && product.seats === 0)) {
+      products.push(product);
+    }
   }
 
   return products;
