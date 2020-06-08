@@ -6,21 +6,22 @@ async function getDirectedShifts(direction, storage_id) {
   // _key: shift._key : for use as unique key in talbe
   const shifts = await db
     .query(
-      aql`FOR shift IN Shift      
+      aql`FOR shift IN Shift
           LET product = DOCUMENT(shift.product_id)
           LET nomen = DOCUMENT(product.nomen_id)
-          FILTER ${
-            direction === 'to'
-          } ? shift._to == ${storage_id} : shift._from == ${storage_id}                  
+          FILTER ${direction === 'to'} ? shift._to == ${storage_id} : shift._from == ${storage_id}
           RETURN {
             shift_key: shift._key,
+            tnved: nomen.tnved,
             name: nomen.name,
-            measure: nomen.measure,             
-            product_id: product._id,             
-            its: product.its,             
-            pack: product.pack,             
+            measure: nomen.measure,
+            product_id: product._id,
+            wnetto: product.wnetto,
+            wbrutto: product.wbrutto,
+            its: product.its,
+            pack: product.pack,
             qty: shift.qty,
-            seats: shift.seats 
+            seats: shift.seats
           }`
     )
     .then((cursor) => {
