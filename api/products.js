@@ -6,8 +6,10 @@ const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
 const { productSchema, nomenSchema } = require('../schemas/productSchemas');
 const Product = require('../models/Product');
+const Nomen = require('../models/Nomen');
 
 const productSrvices = require('../services/products');
+const { tnvedItsUpdateOrCreate } = require('../services/tnved');
 
 const router = new Router();
 
@@ -49,14 +51,19 @@ async function getProduct(ctx) {
 
 async function createProduct(ctx) {
   let { createProductDto } = ctx.request.body;
+  const user = ctx.state.user;
 
   const productData = Joi.attempt(createProductDto, productSchema, {
     stripUnknown: true,
   });
-  const nomen = await db.collection('Nomen').document(productData.nomen_id, { graceful: true });
-  if (!nomen) ctx.throw(404, `Nomenclature ${productData.nomen_id} not found`);
 
-  const product = await Product.create(productData, ctx.state.user);
+  const nomen = await Nomen.getOr404(productData.nomen_id);
+
+  if (productData.its) {
+    await tnvedItsUpdateOrCreate(nomen.tnved, productData.its, user);
+  }
+
+  const product = await Product.create(productData, user);
 
   ctx.body = {
     product: { ...nomen, ...product },
@@ -120,6 +127,11 @@ async function updateProduct(ctx) {
   let productData = Joi.attempt(updateProductDto, productSchema, {
     stripUnknown: true,
   });
+
+  if (productData.its) {
+    await tnvedItsUpdateOrCreate(updateProductDto.tnved, productData.its, user);
+  }
+
   productData.updatedBy = user._id;
   productData.updatedAt = new Date();
   const meta = await db.collection('Product').update(_key, productData, true);
