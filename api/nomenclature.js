@@ -19,8 +19,9 @@ async function findNomens(ctx) {
     // an arango error is thown when search starts with a comma
     .query(
       aql`FOR nomen IN ${!!search} ? FULLTEXT(Nomen, "name", ${search}) : Nomen
+          LET tnved = DOCUMENT(CONCAT('Tnved/', nomen.tnved))
           SORT nomen.createdAt DESC
-          RETURN MERGE(nomen)`
+          RETURN MERGE(nomen, {its: tnved.its})`
     )
     .then((cursor) => {
       return cursor.all();
