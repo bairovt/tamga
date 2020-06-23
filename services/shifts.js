@@ -9,6 +9,7 @@ async function getDirectedShifts(direction, storage_id) {
       aql`FOR shift IN Shift
           LET product = DOCUMENT(shift.product_id)
           LET nomen = DOCUMENT(product.nomen_id)
+          LET client = DOCUMENT(product.client_id)
           FILTER ${direction === 'to'} ? shift._to == ${storage_id} : shift._from == ${storage_id}
           RETURN {
             _key: shift._key,
@@ -16,8 +17,9 @@ async function getDirectedShifts(direction, storage_id) {
             name: nomen.name,
             measure: nomen.measure,
             product_id: product._id,
+            clientName: client.name,
             wnetto: product.wnetto,
-            wbrutto: product.wbrutto,
+            wbrutto: product.wbrutto,            
             its: product.its,
             pack: product.pack,
             qty: shift.qty,

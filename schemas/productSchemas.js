@@ -20,6 +20,7 @@ const nomenSchema = Joi.object().keys({
 
 const productSchema = Joi.object().keys({
   order_id: arangoIdSchema,
+  client_id: arangoIdSchema,
   nomen_id: arangoIdSchema,
   pack: Joi.string().allow('').max(255),
   seats: Joi.number().min(0).empty('').default(0),
