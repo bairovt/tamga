@@ -8,7 +8,7 @@ const { productSchema, nomenSchema } = require('../schemas/productSchemas');
 const Product = require('../models/Product');
 const Nomen = require('../models/Nomen');
 
-const productSrvices = require('../services/products');
+const productSrvs = require('../services/products');
 const { tnvedItsUpdateOrCreate } = require('../services/tnved');
 
 const router = new Router();
@@ -112,7 +112,7 @@ async function createProductsFromCsv(ctx) {
   });
 
   for await (let data of products) {
-    await productSrvices.createNomenProduct(ctx, data.nomenData, data.productData);
+    await productSrvs.createNomenProduct(ctx, data.nomenData, data.productData);
   }
 
   ctx.body = {
@@ -143,6 +143,9 @@ async function updateProduct(ctx) {
 async function deleteProduct(ctx) {
   // todo: verify deletion of the product
   const { _key } = ctx.params;
+  if (await productSrvs.isProductShifted(_key)) {
+    return ctx.throw(400, `Нельзя удалить принятый товар ${_key}`);
+  }
   await db.collection('Product').remove(_key);
   ctx.body = {
     result: 'OK',
@@ -154,6 +157,13 @@ async function deleteProducts(ctx) {
   // https://github.com/arangodb/arangojs/blob/master/docs/Drivers/JS/Reference/Database/Transactions.md
   const { productKeys } = ctx.request.body;
   const productsColl = db.collection('Product');
+  for await (let isShifted of productKeys.map((_key) => {
+    return productSrvs.isProductShifted(_key);
+  })) {
+    if (isShifted) {
+      return ctx.throw(400, `Нельзя удалить принятый товар`);
+    }
+  }
   const removePromises = productKeys.map((key) => productsColl.remove(key));
   await Promise.all(removePromises);
   ctx.body = {
