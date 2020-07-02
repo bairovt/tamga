@@ -8,7 +8,8 @@ const { productSchema, nomenSchema } = require('../schemas/productSchemas');
 const Product = require('../models/Product');
 const Nomen = require('../models/Nomen');
 
-const productSrvs = require('../services/products');
+const productSrv = require('../services/product');
+const orderSrv = require('../services/order');
 const { tnvedItsUpdateOrCreate } = require('../services/tnved');
 
 const router = new Router();
@@ -112,7 +113,7 @@ async function createProductsFromCsv(ctx) {
   });
 
   for await (let data of products) {
-    await productSrvs.createNomenProduct(ctx, data.nomenData, data.productData);
+    await productSrv.createNomenProduct(ctx, data.nomenData, data.productData);
   }
 
   ctx.body = {
@@ -140,13 +141,12 @@ async function updateProduct(ctx) {
   };
 }
 
-async function deleteProduct(ctx) {
+async function forcedProductRemoval(ctx) {
   // todo: verify deletion of the product
   const { _key } = ctx.params;
-  if (await productSrvs.isProductShifted(_key)) {
-    return ctx.throw(400, `Нельзя удалить принятый товар ${_key}`);
-  }
-  await db.collection('Product').remove(_key);
+  const product = await db.collection('Product').document(_key);
+  await productSrv.forcedRemoval('Product/' + _key);
+  await orderSrv.checkIsNew(product.order_id);
   ctx.body = {
     result: 'OK',
   };
@@ -155,10 +155,10 @@ async function deleteProduct(ctx) {
 async function deleteProducts(ctx) {
   // todo: make within a transaction
   // https://github.com/arangodb/arangojs/blob/master/docs/Drivers/JS/Reference/Database/Transactions.md
-  const { productKeys } = ctx.request.body;
+  const { productKeys, order_id } = ctx.request.body;
   const productsColl = db.collection('Product');
   for await (let isShifted of productKeys.map((_key) => {
-    return productSrvs.isProductShifted(_key);
+    return productSrv.isProductShifted(_key);
   })) {
     if (isShifted) {
       return ctx.throw(400, `Нельзя удалить принятый товар`);
@@ -166,6 +166,7 @@ async function deleteProducts(ctx) {
   }
   const removePromises = productKeys.map((key) => productsColl.remove(key));
   await Promise.all(removePromises);
+  await orderSrv.checkIsNew(order_id);
   ctx.body = {
     result: 'OK',
   };
@@ -176,7 +177,7 @@ router
   .get('/', findProducts)
   .get('/:_key', getProduct)
   .put('/:_key', authorize(['logist']), updateProduct)
-  .delete('/:_key', authorize(['logist']), deleteProduct)
+  .delete('/:_key', authorize(['logist']), forcedProductRemoval)
   .delete('/', authorize(['logist']), deleteProducts)
   .post('/csv', authorize(['logist']), createProductsFromCsv);
 
