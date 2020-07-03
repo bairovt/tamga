@@ -47,9 +47,13 @@ async function getOrder(ctx) {
     .query(
       aql`FOR product IN Product
           LET nomen = DOCUMENT(product.nomen_id)
+          LET taken = TO_BOOL(FIRST(FOR s IN Shift 
+            FILTER s.product_id == product._id RETURN s))
           FILTER product.order_id == ${'Order/' + _key}
           SORT product.createdAt DESC
-          RETURN MERGE(product, {tnved: nomen.tnved, name: nomen.name, measure: nomen.measure})`
+          RETURN MERGE(product, {
+            tnved: nomen.tnved, name: nomen.name, measure: nomen.measure, taken: taken
+          })`
     )
     .then((cursor) => {
       return cursor.all();
