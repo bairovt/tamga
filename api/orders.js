@@ -36,7 +36,10 @@ async function getOrder(ctx) {
     .query(
       aql`FOR order IN Order
           FILTER order._key == ${_key}          
-          RETURN MERGE(order, {client: DOCUMENT(order.client_id)})`
+          RETURN MERGE(order, {
+            client: DOCUMENT(order.client_id),
+            takenOnStore: DOCUMENT(order.takenOn)
+          })`
     )
     .then((cursor) => {
       return cursor.next();
