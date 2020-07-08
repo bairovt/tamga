@@ -5,6 +5,7 @@ const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
 const orderSchema = require('../schemas/orderSchema');
+const orderSrv = require('../services/order');
 
 const router = new Router();
 
@@ -30,37 +31,11 @@ async function findOrders(ctx) {
 }
 
 async function getOrder(ctx) {
-  const { _key } = ctx.params;
-  // todo: const { with_products = true } = ctx.query;
-  let order = await db
-    .query(
-      aql`FOR order IN Order
-          FILTER order._key == ${_key}          
-          RETURN MERGE(order, {
-            client: DOCUMENT(order.client_id),
-            takenOnStore: DOCUMENT(order.takenOn)
-          })`
-    )
-    .then((cursor) => {
-      return cursor.next();
-    });
-  if (!order) ctx.throw(404, 'Order not found');
+  const { order_key } = ctx.params;
+  const order_id = 'Order/' + order_key;
 
-  let products = await db
-    .query(
-      aql`FOR product IN Product
-          LET nomen = DOCUMENT(product.nomen_id)
-          LET taken = TO_BOOL(FIRST(FOR s IN Shift 
-            FILTER s.product_id == product._id RETURN s))
-          FILTER product.order_id == ${'Order/' + _key}
-          SORT product.createdAt DESC
-          RETURN MERGE(product, {
-            tnved: nomen.tnved, name: nomen.name, measure: nomen.measure, taken: taken
-          })`
-    )
-    .then((cursor) => {
-      return cursor.all();
-    });
+  const order = await orderSrv.getOr404(order_id);
+  const products = await orderSrv.getProducts(order_id);
 
   ctx.body = {
     order,
@@ -81,36 +56,30 @@ async function createOrder(ctx) {
 }
 
 async function updateOrder(ctx) {
-  const { _key } = ctx.params;
+  const { order_key } = ctx.params;
   const { user } = ctx.state;
   let { updateOrderDto } = ctx.request.body;
   let orderData = Joi.attempt(updateOrderDto, orderSchema, { stripUnknown: true });
   orderData.updatedBy = user._id;
   orderData.updatedAt = new Date();
-  await db.collection('Order').update(_key, orderData);
+  await db.collection('Order').update(order_key, orderData);
   ctx.body = {
     result: 'OK',
   };
 }
 
 async function deleteOrder(ctx) {
-  const { _key } = ctx.params;
+  const { order_key } = ctx.params;
+  const order_id = 'Order/' + order_key;
   const ordersColl = db.collection('Order');
-  const order = await ordersColl.document(_key);
-  if (!order) ctx.throw(404);
-  let productsCount = await db
-    .query(
-      aql`FOR product IN Product          
-          FILTER product.order_id == ${'Order/' + _key}
-          COLLECT WITH COUNT INTO cnt
-          RETURN cnt`
-    )
-    .then((cursor) => {
-      return cursor.next();
-    });
-  if (productsCount) ctx.throw(400, 'Order has products');
 
-  await ordersColl.remove(_key);
+  const order = await ordersColl.document(order_id);
+  if (!order) ctx.throw(404);
+
+  const productsCount = await orderSrv.productsCount(order_id);
+  if (productsCount) ctx.throw(400, 'Удалеяемый заказ не должен содержать товаров');
+
+  await ordersColl.remove(order_id);
   ctx.body = {
     result: 'OK',
   };
@@ -119,8 +88,8 @@ async function deleteOrder(ctx) {
 router
   .post('/', authorize(['logist']), createOrder)
   .get('/', findOrders)
-  .get('/:_key', getOrder)
-  .put('/:_key', authorize(['logist']), updateOrder)
-  .delete('/:_key', authorize(['logist']), deleteOrder);
+  .get('/:order_key', getOrder)
+  .put('/:order_key', authorize(['logist']), updateOrder)
+  .delete('/:order_key', authorize(['logist']), deleteOrder);
 
 module.exports = router.routes();
