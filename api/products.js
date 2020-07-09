@@ -8,9 +8,9 @@ const { productSchema, nomenSchema } = require('../schemas/productSchemas');
 const Product = require('../models/Product');
 const Nomen = require('../models/Nomen');
 
-const productSrv = require('../services/product');
-const orderSrv = require('../services/order');
-const { tnvedItsUpdateOrCreate } = require('../services/tnved');
+const productSrv = require('../services/product-service');
+const orderSrv = require('../services/order-service');
+const { tnvedItsUpdateOrCreate } = require('../services/tnved-service');
 
 const router = new Router();
 

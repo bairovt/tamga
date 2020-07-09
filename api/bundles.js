@@ -2,7 +2,7 @@
 const db = require('../lib/arangodb');
 const aql = require('arangojs').aql;
 const Router = require('koa-router');
-const { getDirectedShifts, groupShiftsByProduct, balance } = require('../services/shift');
+const { getDirectedShifts, groupShiftsByProduct, balance } = require('../services/shift-service');
 
 const router = new Router();
 

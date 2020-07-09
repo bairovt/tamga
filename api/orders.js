@@ -5,7 +5,7 @@ const Router = require('koa-router');
 const authorize = require('../middleware/authorize');
 const Joi = require('@hapi/joi');
 const orderSchema = require('../schemas/orderSchema');
-const orderSrv = require('../services/order');
+const orderSrv = require('../services/order-service');
 
 const router = new Router();
 

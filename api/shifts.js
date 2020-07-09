@@ -2,6 +2,7 @@ const db = require('../lib/arangodb');
 const aql = require('arangojs').aql;
 const Router = require('koa-router');
 const Product = require('../models/Product');
+const orderSrv = require('../services/order-service');
 
 const router = new Router();
 
@@ -9,8 +10,16 @@ async function takeOnSklad(ctx) {
   const { client_id, order_id, sklad_id } = ctx.request.body;
   const ordersColl = db.collection('Order');
   const order = await ordersColl.document(order_id);
-  if (order.status !== 'NEW') ctx.throw(400, 'Order status should be NEW');
-  const products = await Product.getByOrderId(order_id);
+  if (!['NEW', 'TAKEN'].includes(order.status)) {
+    ctx.throw(400, 'Для приняния на склад статус заказа должен быть НОВЫЙ или ПРИНЯТ');
+  }
+  if (order.status === 'TAKEN') {
+    if (order.takenOn !== sklad_id) {
+      ctx.throw(400, 'Нельзя принимать товары одного заказа на разные склады');
+    }
+  }
+  const products = await orderSrv.getNotTakenProducts(order_id);
+  if (products.length === 0) ctx.throw(400, 'Нет товарных позиций для принятия');
 
   const shifts = [];
   const createdBy = ctx.state.user._id;
@@ -30,11 +39,18 @@ async function takeOnSklad(ctx) {
   }
   const shiftColl = db.collection('Shift');
   await shiftColl.import(shifts, { complete: true });
-  const status = 'TAKEN';
-  await ordersColl.update(order_id, { status });
+
+  if (order.status === 'NEW') {
+    await ordersColl.update(order_id, {
+      status: 'TAKEN',
+      takenOn: sklad_id,
+    });
+  }
+
   ctx.body = {
     result: 'ok',
-    status,
+    status: 'TAKEN',
+    takenCount: products.length,
   };
 }
 

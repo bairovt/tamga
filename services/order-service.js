@@ -12,7 +12,7 @@ async function getOr404(order_id) {
           FILTER order._id == ${order_id}
           RETURN MERGE(order, {
             client: DOCUMENT(order.client_id),
-            takenOnStore: DOCUMENT(order.takenOn)
+            takenOnSklad: DOCUMENT(order.takenOn)
           })`
     )
     .then((cursor) => {
@@ -71,4 +71,20 @@ async function checkIsNew(_id) {
   }
 }
 
-module.exports = { getOr404, getProducts, productsCount, checkIsNew };
+async function getNotTakenProducts(order_id) {
+  let products = await db
+    .query(
+      aql`FOR p IN Product          
+          FILTER p.order_id == ${order_id}
+          FILTER TO_BOOL(p.seats) AND TO_BOOL(p.qty)
+          FILTER NOT TO_BOOL(FIRST(
+              FOR s IN Shift 
+              FILTER s.product_id == p._id 
+              RETURN s))
+          RETURN p`
+    )
+    .then((cursor) => cursor.all());
+  return products;
+}
+
+module.exports = { getOr404, getProducts, productsCount, checkIsNew, getNotTakenProducts };
