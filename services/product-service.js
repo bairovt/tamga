@@ -26,16 +26,16 @@ async function isProductShifted(_key) {
   return !!shift;
 }
 
-async function forcedRemoval(_key) {
-  let shift = await db
+async function forcedRemoval(product_id) {
+  let shifts = await db
     .query(
       aql`FOR sh IN Shift
-          FILTER sh.product_id == ${'Product/' + _key}
+          FILTER sh.product_id == ${product_id}
           REMOVE sh IN Shift`
     )
-    .then((cursor) => cursor.next());
+    .then((cursor) => cursor.all());
 
-  await db.collection('Product').remove(_key);
+  await db.collection('Product').remove(product_id);
 }
 
 module.exports = { createNomenProduct, isProductShifted, forcedRemoval };
